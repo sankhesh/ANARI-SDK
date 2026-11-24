@@ -56,6 +56,19 @@ try:
 except (ImportError, AttributeError):
     pass
 
+if sys.platform == "darwin":
+    import ctypes
+
+    # PySDL3 opens SDL with local visibility. Make its symbols visible to
+    # dyld before anari.loadLibrary() binds the device's SDL calls.
+    try:
+        _sdl_global = ctypes.CDLL(
+            os.environ.get("HELIDE_GPU_SDL3_LIBRARY") or "libSDL3.dylib",
+            mode=ctypes.RTLD_GLOBAL,
+        )
+    except OSError:
+        pass  # The native device reports SDL loading errors on first use.
+
 _error_status = anari.ffi.from_handle(anari.error_status_handle)
 _status_callback = None
 
